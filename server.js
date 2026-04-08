@@ -343,7 +343,7 @@ function buildRequestSummaryText(user) {
     `ผู้ยื่นคำขอ: ${req.requesterName}`,
     `หน่วยงาน: ${req.requesterUnit}`,
     `เบอร์ผู้ยื่น: ${req.requesterPhone}`,
-    `เลขอ้างอิง: ${req.referenceNumber}`,
+    `เบอร์เป้าหมาย: ${req.referenceNumber}`,
     `เครือข่าย: ${req.network}`,
     `ชื่อเคส/เหตุ: ${req.caseName}`,
     `หมายเหตุ: ${req.note || '-'}`,
