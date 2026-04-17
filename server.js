@@ -299,6 +299,213 @@ function buildCancelTemplate(title, text) {
   };
 }
 
+function buildHelpFlex() {
+  return {
+    type: 'flex',
+    altText: 'เมนูคำสั่งใช้งาน',
+    contents: {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#0F172A',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '🔎 คำสั่งใช้งาน',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'xl',
+          },
+          {
+            type: 'text',
+            text: 'เลือกดูคำสั่งที่ต้องการใช้งานได้ด้านล่าง',
+            color: '#CBD5E1',
+            size: 'sm',
+            margin: 'md',
+            wrap: true,
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '📂 ลงทะเบียน',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '📅 เช็คสถานะ',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 'เช็คสถานะ',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '📶 คำขอข้อมูลสัญญาณ',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 'base@',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '🏦 คำขอข้อมูลธนาคารภายใน',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 'bank@',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '🧑‍💻 ดู UID ของตนเอง',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 'myid',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: '❎ ยกเลิกขั้นตอนปัจจุบัน',
+                weight: 'bold',
+                size: 'md',
+              },
+              {
+                type: 'text',
+                text: 'ยกเลิก',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#2563EB',
+            action: {
+              type: 'message',
+              label: '📅 เช็คสถานะ',
+              text: 'เช็คสถานะ',
+            },
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'message',
+              label: '🧑‍💻 ดู UID',
+              text: 'myid',
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
 function newSafeRequestDraft(user) {
   return {
     requestId: `REQ-${Date.now()}`,
@@ -814,29 +1021,6 @@ async function handleBankRequestText(event, user, text) {
   return replyText(event.replyToken, 'ไม่พบขั้นตอนที่กำลังทำรายการ');
 }
 
-function buildHelpText() {
-  return [
-    '🔎คำสั่งใช้งาน',
-    '',
-    '📂ลงทะเบียน',
-    're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
-    '',
-    '📅เช็คสถานะ: เช็คสถานะ',
-    '',
-    '📶คำขอข้อมูลสัญญาณ',
-    '┗ ╾ base@',
-    '',
-    '🏦 คำขอข้อมูลธนาคารภายใน',
-    '┗ ╾ bank@',
-    '',
-    '🧑‍💻 ดู UID ของตนเอง',
-    '┗ ╾ myid',
-    '',
-    '❎ ยกเลิกขั้นตอนปัจจุบัน',
-    '┗ ╾ ยกเลิก',
-  ].join('\n');
-}
-
 async function handleTextMessage(event) {
   const userId = event.source.userId;
   const user = ensureUser(userId);
@@ -851,7 +1035,7 @@ async function handleTextMessage(event) {
   }
 
   if (text.toLowerCase() === 'help') {
-    return replyText(event.replyToken, buildHelpText());
+    return replyMessages(event.replyToken, [buildHelpFlex()]);
   }
 
   if (text === 'myid') {
@@ -890,7 +1074,7 @@ async function handleTextMessage(event) {
     return replyText(event.replyToken, 'ไม่มีรายการที่กำลังทำอยู่');
   }
 
-  return replyText(event.replyToken, buildHelpText());
+  return replyMessages(event.replyToken, [buildHelpFlex()]);
 }
 
 async function handleImageMessage(event) {
