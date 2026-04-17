@@ -16,11 +16,14 @@ const client = new line.messagingApi.MessagingApiClient({
   channelAccessToken: config.channelAccessToken,
 });
 
-// ✅ ใช้ Render Persistent Disk
-const PERSIST_DIR = process.env.PERSIST_DIR || '/var/data';
+const PORT = process.env.PORT || 3000;
+const ADMIN_USER_IDS = (process.env.LINE_ADMIN_USER_IDS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 
-const DATA_DIR = path.join(PERSIST_DIR, 'data');
-const UPLOAD_DIR = path.join(PERSIST_DIR, 'uploads');
+const DATA_DIR = path.join(__dirname, 'data');
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -149,6 +152,24 @@ function parseRegisterText(text) {
     department,
     phone: cleanPhone,
     raw,
+  };
+}
+
+function parseAdminSendCommand(text) {
+  if (!text || !text.startsWith('sendto#')) return null;
+
+  const raw = text.slice(7).trim();
+  const parts = raw.split('|');
+  if (parts.length < 2) return null;
+
+  const targetUserId = (parts[0] || '').trim();
+  const messageText = parts.slice(1).join('|').trim();
+
+  if (!targetUserId || !messageText) return null;
+
+  return {
+    targetUserId,
+    messageText,
   };
 }
 
@@ -339,12 +360,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '📂 ลงทะเบียน',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '📂 ลงทะเบียน', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
@@ -362,12 +378,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '📅 เช็คสถานะ',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '📅 เช็คสถานะ', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 'เช็คสถานะ',
@@ -385,12 +396,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '📶 คำขอข้อมูลสัญญาณ',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '📶 คำขอข้อมูลสัญญาณ', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 'base@',
@@ -408,12 +414,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '🏦 คำขอข้อมูลธนาคารภายใน',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '🏦 คำขอข้อมูลธนาคารภายใน', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 'bank@',
@@ -431,12 +432,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '🧑‍💻 ดู UID ของตนเอง',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '🧑‍💻 ดู UID ของตนเอง', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 'myid',
@@ -454,12 +450,7 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              {
-                type: 'text',
-                text: '❎ ยกเลิกขั้นตอนปัจจุบัน',
-                weight: 'bold',
-                size: 'md',
-              },
+              { type: 'text', text: '❎ ยกเลิกขั้นตอนปัจจุบัน', weight: 'bold', size: 'md' },
               {
                 type: 'text',
                 text: 'ยกเลิก',
@@ -575,91 +566,33 @@ function buildSupportFlex() {
                 layout: 'baseline',
                 spacing: 'sm',
                 contents: [
-                  {
-                    type: 'text',
-                    text: '📗 AIS',
-                    size: 'sm',
-                    color: '#16A34A',
-                    flex: 1
-                  },
-                  {
-                    type: 'text',
-                    text: '📙 TRUE',
-                    size: 'sm',
-                    color: '#DC2626',
-                    flex: 1
-                  },
-                  {
-                    type: 'text',
-                    text: '📘 DTAC',
-                    size: 'sm',
-                    color: '#2563EB',
-                    flex: 1
-                  }
+                  { type: 'text', text: '📗 AIS', size: 'sm', color: '#16A34A', flex: 1 },
+                  { type: 'text', text: '📙 TRUE', size: 'sm', color: '#DC2626', flex: 1 },
+                  { type: 'text', text: '📘 DTAC', size: 'sm', color: '#2563EB', flex: 1 }
                 ]
               },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
+              { type: 'separator', margin: 'md' },
               {
                 type: 'box',
                 layout: 'vertical',
                 margin: 'md',
                 spacing: 'sm',
                 contents: [
-                  {
-                    type: 'text',
-                    text: 'แพ็กเกจ 6 เดือน',
-                    weight: 'bold',
-                    size: 'md',
-                    color: '#111827'
-                  },
-                  {
-                    type: 'text',
-                    text: '8,000 THB',
-                    weight: 'bold',
-                    size: 'xl',
-                    color: '#059669'
-                  },
-                  {
-                    type: 'text',
-                    text: 'ใช้งานได้ 8 รายการต่อวัน',
-                    size: 'sm',
-                    color: '#6B7280'
-                  }
+                  { type: 'text', text: 'แพ็กเกจ 6 เดือน', weight: 'bold', size: 'md', color: '#111827' },
+                  { type: 'text', text: '8,000 THB', weight: 'bold', size: 'xl', color: '#059669' },
+                  { type: 'text', text: 'ใช้งานได้ 8 รายการต่อวัน', size: 'sm', color: '#6B7280' }
                 ]
               },
-              {
-                type: 'separator',
-                margin: 'lg'
-              },
+              { type: 'separator', margin: 'lg' },
               {
                 type: 'box',
                 layout: 'vertical',
                 margin: 'md',
                 spacing: 'sm',
                 contents: [
-                  {
-                    type: 'text',
-                    text: 'แพ็กเกจ 1 ปี',
-                    weight: 'bold',
-                    size: 'md',
-                    color: '#111827'
-                  },
-                  {
-                    type: 'text',
-                    text: '15,000 THB',
-                    weight: 'bold',
-                    size: 'xl',
-                    color: '#059669'
-                  },
-                  {
-                    type: 'text',
-                    text: 'ใช้งานได้ 15 รายการต่อวัน',
-                    size: 'sm',
-                    color: '#6B7280'
-                  }
+                  { type: 'text', text: 'แพ็กเกจ 1 ปี', weight: 'bold', size: 'md', color: '#111827' },
+                  { type: 'text', text: '15,000 THB', weight: 'bold', size: 'xl', color: '#059669' },
+                  { type: 'text', text: 'ใช้งานได้ 15 รายการต่อวัน', size: 'sm', color: '#6B7280' }
                 ]
               }
             ]
@@ -714,20 +647,8 @@ function buildSupportFlex() {
             layout: 'vertical',
             spacing: 'md',
             contents: [
-              {
-                type: 'text',
-                text: 'แพ็กเกจรายปี',
-                weight: 'bold',
-                size: 'md',
-                color: '#111827'
-              },
-              {
-                type: 'text',
-                text: '20,000 THB',
-                weight: 'bold',
-                size: 'xxl',
-                color: '#EA580C'
-              },
+              { type: 'text', text: 'แพ็กเกจรายปี', weight: 'bold', size: 'md', color: '#111827' },
+              { type: 'text', text: '20,000 THB', weight: 'bold', size: 'xxl', color: '#EA580C' },
               {
                 type: 'text',
                 text: 'รองรับงานตรวจสอบข้อมูลแบงค์ STM และพิกัดแอพธนาคารปักหัว',
@@ -735,41 +656,17 @@ function buildSupportFlex() {
                 size: 'sm',
                 color: '#6B7280'
               },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
+              { type: 'separator', margin: 'md' },
               {
                 type: 'box',
                 layout: 'vertical',
                 margin: 'md',
                 spacing: 'sm',
                 contents: [
-                  {
-                    type: 'text',
-                    text: 'เงื่อนไขแพ็กเกจ',
-                    weight: 'bold',
-                    size: 'sm',
-                    color: '#374151'
-                  },
-                  {
-                    type: 'text',
-                    text: '• ระยะเวลาใช้งาน 1 ปี',
-                    size: 'sm',
-                    color: '#6B7280'
-                  },
-                  {
-                    type: 'text',
-                    text: '• ใช้งานตามสิทธิ์ของระบบ',
-                    size: 'sm',
-                    color: '#6B7280'
-                  },
-                  {
-                    type: 'text',
-                    text: '• สำหรับผู้ได้รับอนุมัติเท่านั้น',
-                    size: 'sm',
-                    color: '#6B7280'
-                  }
+                  { type: 'text', text: 'เงื่อนไขแพ็กเกจ', weight: 'bold', size: 'sm', color: '#374151' },
+                  { type: 'text', text: '• ระยะเวลาใช้งาน 1 ปี', size: 'sm', color: '#6B7280' },
+                  { type: 'text', text: '• ใช้งานตามสิทธิ์ของระบบ', size: 'sm', color: '#6B7280' },
+                  { type: 'text', text: '• สำหรับผู้ได้รับอนุมัติเท่านั้น', size: 'sm', color: '#6B7280' }
                 ]
               }
             ]
@@ -1115,6 +1012,38 @@ async function handleStatusCheck(event) {
   return replyMessages(event.replyToken, [buildStatusFlex(user)]);
 }
 
+async function handleAdminSendMessage(event, text) {
+  const actorId = event.source.userId;
+
+  if (!ADMIN_USER_IDS.includes(actorId)) {
+    return replyText(event.replyToken, 'คำสั่งนี้สำหรับแอดมินเท่านั้น');
+  }
+
+  const parsed = parseAdminSendCommand(text);
+  if (!parsed) {
+    return replyText(
+      event.replyToken,
+      'รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์:\nsendto#UID|ข้อความที่ต้องการส่ง'
+    );
+  }
+
+  const { targetUserId, messageText } = parsed;
+
+  try {
+    await pushText(targetUserId, messageText);
+    return replyText(
+      event.replyToken,
+      `ส่งข้อความเรียบร้อยแล้ว✅\nถึง UID: ${targetUserId}\nข้อความ: ${messageText}`
+    );
+  } catch (err) {
+    console.error('admin send message failed:', err?.message || err);
+    return replyText(
+      event.replyToken,
+      `ส่งข้อความไม่สำเร็จ❌\nUID: ${targetUserId}\nกรุณาตรวจสอบว่า UID ถูกต้องและผู้ใช้เคยเพิ่มเพื่อนบอทแล้ว`
+    );
+  }
+}
+
 async function handlePostback(event) {
   const actorId = event.source.userId;
   if (!ADMIN_USER_IDS.includes(actorId)) {
@@ -1332,6 +1261,10 @@ async function handleTextMessage(event) {
 
   if (text.toLowerCase() === 'support') {
     return replyMessages(event.replyToken, [buildSupportFlex()]);
+  }
+
+  if (text.startsWith('sendto#')) {
+    return handleAdminSendMessage(event, text);
   }
 
   if (text === 'myid') {
