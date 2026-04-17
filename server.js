@@ -819,6 +819,14 @@ async function handleTextMessage(event) {
   const user = ensureUser(userId);
   const text = (event.message.text || '').trim();
 
+  if (!user.lineName) {
+    const profile = await getProfileSafe(userId);
+    if (profile?.displayName) {
+      user.lineName = profile.displayName;
+      saveDb();
+    }
+  }
+
   if (text === 'myid') {
     return replyText(event.replyToken, `UID: ${userId}`);
   }
@@ -848,7 +856,10 @@ async function handleTextMessage(event) {
   }
 
   if (text === 'ยกเลิก' || text.toLowerCase() === 'cancel') {
-    clearFlow(user);
+    if (user.flow) {
+      clearFlow(user);
+      return replyText(event.replyToken, 'ยกเลิกรายการเรียบร้อยแล้ว');
+    }
     return replyText(event.replyToken, 'ไม่มีรายการที่กำลังทำอยู่');
   }
 
@@ -866,6 +877,8 @@ async function handleTextMessage(event) {
       'พิมพ์: bank@',
       '5) ดู UID ของตนเอง',
       'พิมพ์: myid',
+      '6) ยกเลิกขั้นตอนปัจจุบัน',
+      'พิมพ์: ยกเลิก',
     ].join('\n')
   );
 }
@@ -918,6 +931,7 @@ async function handleEvent(event) {
 }
 
 app.use('/files', express.static(UPLOAD_DIR));
+
 app.get('/', (_, res) => {
   res.send('LINE registration bot is running');
 });
@@ -927,7 +941,7 @@ app.post('/webhook', line.middleware(config), async (req, res) => {
     await Promise.all(req.body.events.map(handleEvent));
     res.status(200).end();
   } catch (err) {
-    console.error(err);
+    console.error('webhook error:', err);
     res.status(500).end();
   }
 });
@@ -935,3 +949,22 @@ app.post('/webhook', line.middleware(config), async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
+
+/*
+.env example
+LINE_CHANNEL_ACCESS_TOKEN=xxxxxxxx
+LINE_CHANNEL_SECRET=xxxxxxxx
+LINE_ADMIN_USER_IDS=Uxxxxxxxx,Uyyyyyyyy
+BASE_URL=https://your-render-domain.onrender.com
+PORT=3000
+
+package.json dependencies
+{
+  "dependencies": {
+    "@line/bot-sdk": "^10.4.0",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1"
+  }
+}
+*/
