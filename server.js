@@ -16,14 +16,11 @@ const client = new line.messagingApi.MessagingApiClient({
   channelAccessToken: config.channelAccessToken,
 });
 
-const PORT = process.env.PORT || 3000;
-const ADMIN_USER_IDS = (process.env.LINE_ADMIN_USER_IDS || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+// ✅ ใช้ Render Persistent Disk
+const PERSIST_DIR = process.env.PERSIST_DIR || '/var/data';
 
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const DATA_DIR = path.join(PERSIST_DIR, 'data');
+const UPLOAD_DIR = path.join(PERSIST_DIR, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
