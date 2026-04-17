@@ -493,16 +493,311 @@ function buildHelpFlex() {
           },
           {
             type: 'button',
+            style: 'primary',
+            color: '#059669',
+            action: {
+              type: 'message',
+              label: '📶 base@',
+              text: 'base@',
+            },
+            margin: 'sm',
+          },
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#D97706',
+            action: {
+              type: 'message',
+              label: '🏦 bank@',
+              text: 'bank@',
+            },
+            margin: 'sm',
+          },
+          {
+            type: 'button',
             style: 'secondary',
             action: {
               type: 'message',
               label: '🧑‍💻 ดู UID',
               text: 'myid',
             },
+            margin: 'sm',
           },
         ],
       },
     },
+  };
+}
+
+function buildSupportFlex() {
+  return {
+    type: 'flex',
+    altText: 'รายการสนับสนุน',
+    contents: {
+      type: 'carousel',
+      contents: [
+        {
+          type: 'bubble',
+          size: 'mega',
+          hero: {
+            type: 'box',
+            layout: 'vertical',
+            paddingAll: '20px',
+            backgroundColor: '#0F172A',
+            contents: [
+              {
+                type: 'text',
+                text: '📂 รายการสนับสนุน',
+                color: '#FFFFFF',
+                weight: 'bold',
+                size: 'xl'
+              },
+              {
+                type: 'text',
+                text: 'ระบบตรวจสอบข้อมูลสัญญาณ',
+                color: '#CBD5E1',
+                size: 'sm',
+                margin: 'md'
+              }
+            ]
+          },
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'md',
+            contents: [
+              {
+                type: 'text',
+                text: 'ตรวจสอบเบส สด / นอน',
+                weight: 'bold',
+                size: 'lg',
+                color: '#111827'
+              },
+              {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '📗 AIS',
+                    size: 'sm',
+                    color: '#16A34A',
+                    flex: 1
+                  },
+                  {
+                    type: 'text',
+                    text: '📙 TRUE',
+                    size: 'sm',
+                    color: '#DC2626',
+                    flex: 1
+                  },
+                  {
+                    type: 'text',
+                    text: '📘 DTAC',
+                    size: 'sm',
+                    color: '#2563EB',
+                    flex: 1
+                  }
+                ]
+              },
+              {
+                type: 'separator',
+                margin: 'md'
+              },
+              {
+                type: 'box',
+                layout: 'vertical',
+                margin: 'md',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'แพ็กเกจ 6 เดือน',
+                    weight: 'bold',
+                    size: 'md',
+                    color: '#111827'
+                  },
+                  {
+                    type: 'text',
+                    text: '8,000 THB',
+                    weight: 'bold',
+                    size: 'xl',
+                    color: '#059669'
+                  },
+                  {
+                    type: 'text',
+                    text: 'ใช้งานได้ 8 รายการต่อวัน',
+                    size: 'sm',
+                    color: '#6B7280'
+                  }
+                ]
+              },
+              {
+                type: 'separator',
+                margin: 'lg'
+              },
+              {
+                type: 'box',
+                layout: 'vertical',
+                margin: 'md',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'แพ็กเกจ 1 ปี',
+                    weight: 'bold',
+                    size: 'md',
+                    color: '#111827'
+                  },
+                  {
+                    type: 'text',
+                    text: '15,000 THB',
+                    weight: 'bold',
+                    size: 'xl',
+                    color: '#059669'
+                  },
+                  {
+                    type: 'text',
+                    text: 'ใช้งานได้ 15 รายการต่อวัน',
+                    size: 'sm',
+                    color: '#6B7280'
+                  }
+                ]
+              }
+            ]
+          },
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'button',
+                style: 'primary',
+                height: 'sm',
+                color: '#16A34A',
+                action: {
+                  type: 'message',
+                  label: 'เลือกแพ็กเกจนี้',
+                  text: 'สนับสนุนแพ็กเกจตรวจสอบเบส'
+                }
+              }
+            ]
+          }
+        },
+        {
+          type: 'bubble',
+          size: 'mega',
+          hero: {
+            type: 'box',
+            layout: 'vertical',
+            paddingAll: '20px',
+            backgroundColor: '#7C2D12',
+            contents: [
+              {
+                type: 'text',
+                text: '🏦 บริการข้อมูลธนาคาร',
+                color: '#FFFFFF',
+                weight: 'bold',
+                size: 'xl'
+              },
+              {
+                type: 'text',
+                text: 'ตรวจสอบ STM / พิกัดแอพธนาคารปักหัว',
+                color: '#FED7AA',
+                size: 'sm',
+                margin: 'md',
+                wrap: true
+              }
+            ]
+          },
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'md',
+            contents: [
+              {
+                type: 'text',
+                text: 'แพ็กเกจรายปี',
+                weight: 'bold',
+                size: 'md',
+                color: '#111827'
+              },
+              {
+                type: 'text',
+                text: '20,000 THB',
+                weight: 'bold',
+                size: 'xxl',
+                color: '#EA580C'
+              },
+              {
+                type: 'text',
+                text: 'รองรับงานตรวจสอบข้อมูลแบงค์ STM และพิกัดแอพธนาคารปักหัว',
+                wrap: true,
+                size: 'sm',
+                color: '#6B7280'
+              },
+              {
+                type: 'separator',
+                margin: 'md'
+              },
+              {
+                type: 'box',
+                layout: 'vertical',
+                margin: 'md',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'เงื่อนไขแพ็กเกจ',
+                    weight: 'bold',
+                    size: 'sm',
+                    color: '#374151'
+                  },
+                  {
+                    type: 'text',
+                    text: '• ระยะเวลาใช้งาน 1 ปี',
+                    size: 'sm',
+                    color: '#6B7280'
+                  },
+                  {
+                    type: 'text',
+                    text: '• ใช้งานตามสิทธิ์ของระบบ',
+                    size: 'sm',
+                    color: '#6B7280'
+                  },
+                  {
+                    type: 'text',
+                    text: '• สำหรับผู้ได้รับอนุมัติเท่านั้น',
+                    size: 'sm',
+                    color: '#6B7280'
+                  }
+                ]
+              }
+            ]
+          },
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'button',
+                style: 'primary',
+                height: 'sm',
+                color: '#EA580C',
+                action: {
+                  type: 'message',
+                  label: 'เลือกแพ็กเกจนี้',
+                  text: 'สนับสนุนแพ็กเกจข้อมูลธนาคาร'
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
   };
 }
 
@@ -1036,6 +1331,10 @@ async function handleTextMessage(event) {
 
   if (text.toLowerCase() === 'help') {
     return replyMessages(event.replyToken, [buildHelpFlex()]);
+  }
+
+  if (text.toLowerCase() === 'support') {
+    return replyMessages(event.replyToken, [buildSupportFlex()]);
   }
 
   if (text === 'myid') {
