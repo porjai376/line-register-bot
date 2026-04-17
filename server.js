@@ -421,6 +421,24 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
+              { type: 'text', text: '🏦 คำขอข้อมูลธนาคารภายใน', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'bank@',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
               { type: 'text', text: '🧑‍💻 ดู UID ของตนเอง', weight: 'bold', size: 'md' },
               {
                 type: 'text',
@@ -476,6 +494,17 @@ function buildHelpFlex() {
               type: 'message',
               label: '📶 base@',
               text: 'base@',
+            },
+            margin: 'sm',
+          },
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#D97706',
+            action: {
+              type: 'message',
+              label: '🏦 bank@',
+              text: 'bank@',
             },
             margin: 'sm',
           },
