@@ -314,6 +314,22 @@ function newSafeRequestDraft(user) {
   };
 }
 
+function newBankRequestDraft(user) {
+  return {
+    requestId: `BANK-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    requesterName: user.fullName || user.lineName || '-',
+    requesterUnit: user.department || '-',
+    requesterPhone: user.phone || '-',
+    referenceNumber: '',
+    bankName: '',
+    dateRange: '',
+    caseName: '',
+    note: '',
+    attachmentPath: '',
+  };
+}
+
 function normalizeNetwork(text) {
   const raw = String(text || '').trim().toUpperCase();
   if (['AIS', 'TRUE', 'DTAC', 'NT'].includes(raw)) return raw;
@@ -323,6 +339,12 @@ function normalizeNetwork(text) {
 function startSafeRequestFlow(user) {
   user.flow = 'safe_request_reference';
   user.requestDraft = newSafeRequestDraft(user);
+  saveDb();
+}
+
+function startBankRequestFlow(user) {
+  user.flow = 'bank_request_reference';
+  user.requestDraft = newBankRequestDraft(user);
   saveDb();
 }
 
@@ -347,6 +369,25 @@ function buildRequestSummaryText(user) {
     `เครือข่าย: ${req.network}`,
     `ชื่อเคส/เหตุ: ${req.caseName}`,
     `หมายเหตุ: ${req.note || '-'}`,
+  ].join('\n');
+}
+
+function buildBankRequestSummaryText(user) {
+  const req = user.requestDraft;
+  return [
+    '📥 มีคำขอข้อมูลธนาคารภายใน',
+    `เวลา: ${formatThaiDateTime(req.createdAt)}`,
+    `เลขคำขอ: ${req.requestId}`,
+    `ผู้ส่ง: ${user.lineName || '-'}`,
+    `UID: ${user.userId}`,
+    `ผู้ยื่นคำขอ: ${req.requesterName}`,
+    `หน่วยงาน: ${req.requesterUnit}`,
+    `เบอร์ผู้ยื่น: ${req.requesterPhone}`,
+    `เลขอ้างอิงที่ตรวจสอบ: ${req.referenceNumber}`,
+    `ธนาคาร: ${req.bankName}`,
+    `ช่วงวันที่ต้องการข้อมูล: ${req.dateRange}`,
+    `ชื่อเคส: ${req.caseName}`,
+    `รายละเอียดประกอบ: ${req.note || '-'}`,
   ].join('\n');
 }
 
@@ -507,6 +548,7 @@ async function handleSafeRequestImageUpload(event, user) {
     ...req,
     userId: user.userId,
     lineName: user.lineName || '-',
+    requestType: 'safe_request',
     status: 'submitted',
     submittedAt: new Date().toISOString(),
   };
@@ -526,6 +568,45 @@ async function handleSafeRequestImageUpload(event, user) {
   return replyText(
     event.replyToken,
     'รับคำขอเรียบร้อย✅\nรอผลตรวจสอบสักครู่ตามลำดับ📂'
+  );
+}
+
+async function handleBankRequestImageUpload(event, user) {
+  const req = user.requestDraft;
+  if (!req) {
+    clearFlow(user);
+    return replyText(event.replyToken, 'ไม่พบคำขอที่กำลังทำรายการ');
+  }
+
+  const filename = `bank_${user.userId}_${Date.now()}.jpg`;
+  const savePath = path.join(UPLOAD_DIR, filename);
+  await downloadContent(event.message.id, savePath);
+
+  req.attachmentPath = savePath;
+  db.requests[req.requestId] = {
+    ...req,
+    userId: user.userId,
+    lineName: user.lineName || '-',
+    requestType: 'bank_request_internal',
+    status: 'submitted',
+    submittedAt: new Date().toISOString(),
+  };
+  saveDb();
+
+  await notifyAdmins([
+    { type: 'text', text: buildBankRequestSummaryText(user) },
+    {
+      type: 'image',
+      originalContentUrl: `${process.env.BASE_URL}/files/${filename}`,
+      previewImageUrl: `${process.env.BASE_URL}/files/${filename}`,
+    },
+  ]);
+
+  clearFlow(user);
+
+  return replyText(
+    event.replyToken,
+    'รับคำขอข้อมูลธนาคารเรียบร้อย✅\nระบบได้สรุปและส่งให้แอดมินแล้ว'
   );
 }
 
@@ -616,6 +697,18 @@ async function handleBaseStart(event, user) {
   ]);
 }
 
+async function handleBankStart(event, user) {
+  if (!userCanUseBase(user)) {
+    return replyText(event.replyToken, '❌ เฉพาะสมาชิกที่อนุมัติแล้วและยังไม่หมดอายุ');
+  }
+
+  startBankRequestFlow(user);
+  return replyMessages(event.replyToken, [
+    { type: 'text', text: '🏦 ระบบคำขอข้อมูลธนาคาร\nกรุณาแจ้งหมายเลขอ้างอิงที่ต้องการตรวจสอบ' },
+    buildCancelTemplate('คำขอข้อมูลธนาคาร', 'กรุณาแจ้งหมายเลขอ้างอิงที่ต้องการตรวจสอบ'),
+  ]);
+}
+
 async function handleSafeRequestText(event, user, text) {
   if (text === 'ยกเลิก' || text.toLowerCase() === 'cancel') {
     clearFlow(user);
@@ -667,6 +760,60 @@ async function handleSafeRequestText(event, user, text) {
   return replyText(event.replyToken, 'ไม่พบขั้นตอนที่กำลังทำรายการ');
 }
 
+async function handleBankRequestText(event, user, text) {
+  if (text === 'ยกเลิก' || text.toLowerCase() === 'cancel') {
+    clearFlow(user);
+    return replyText(event.replyToken, 'ยกเลิกรายการเรียบร้อยแล้ว');
+  }
+
+  const req = user.requestDraft;
+  if (!req) {
+    clearFlow(user);
+    return replyText(event.replyToken, 'ไม่พบรายการที่กำลังทำอยู่');
+  }
+
+  if (user.flow === 'bank_request_reference') {
+    req.referenceNumber = text;
+    user.flow = 'bank_request_bank_name';
+    saveDb();
+    return replyText(event.replyToken, 'กรุณาระบุชื่อธนาคาร เช่น กสิกร / ไทยพาณิชย์ / กรุงเทพ');
+  }
+
+  if (user.flow === 'bank_request_bank_name') {
+    req.bankName = text;
+    user.flow = 'bank_request_date_range';
+    saveDb();
+    return replyText(event.replyToken, 'กรุณาระบุช่วงวันที่เริ่มต้น - วันที่สิ้นสุด ที่ต้องการข้อมูล');
+  }
+
+  if (user.flow === 'bank_request_date_range') {
+    req.dateRange = text;
+    user.flow = 'bank_request_case_name';
+    saveDb();
+    return replyText(event.replyToken, 'กรุณาระบุชื่อเคส');
+  }
+
+  if (user.flow === 'bank_request_case_name') {
+    req.caseName = text;
+    user.flow = 'bank_request_note';
+    saveDb();
+    return replyText(event.replyToken, 'กรุณาระบุรายละเอียดประกอบอื่น ๆ');
+  }
+
+  if (user.flow === 'bank_request_note') {
+    req.note = text;
+    user.flow = 'bank_request_attachment';
+    saveDb();
+    return replyText(event.replyToken, '📸 กรุณาแนบเอกสารประกอบอื่น ๆ');
+  }
+
+  if (user.flow === 'bank_request_attachment') {
+    return replyText(event.replyToken, 'กรุณาแนบรูปภาพเอกสารประกอบ หรือพิมพ์ ยกเลิก');
+  }
+
+  return replyText(event.replyToken, 'ไม่พบขั้นตอนที่กำลังทำรายการ');
+}
+
 async function handleTextMessage(event) {
   const userId = event.source.userId;
   const user = ensureUser(userId);
@@ -688,8 +835,16 @@ async function handleTextMessage(event) {
     return handleBaseStart(event, user);
   }
 
+  if (text === 'bank@') {
+    return handleBankStart(event, user);
+  }
+
   if (user.flow && user.flow.startsWith('safe_request_')) {
     return handleSafeRequestText(event, user, text);
+  }
+
+  if (user.flow && user.flow.startsWith('bank_request_')) {
+    return handleBankRequestText(event, user, text);
   }
 
   if (text === 'ยกเลิก' || text.toLowerCase() === 'cancel') {
@@ -707,7 +862,9 @@ async function handleTextMessage(event) {
       'พิมพ์: เช็คสถานะ',
       '3) คำขอข้อมูลสัญญาณ',
       'พิมพ์: base@',
-      '4) ดู UID ของตนเอง',
+      '4) คำขอข้อมูลธนาคารภายใน',
+      'พิมพ์: bank@',
+      '5) ดู UID ของตนเอง',
       'พิมพ์: myid',
     ].join('\n')
   );
@@ -723,6 +880,10 @@ async function handleImageMessage(event) {
 
   if (user.flow === 'safe_request_attachment') {
     return handleSafeRequestImageUpload(event, user);
+  }
+
+  if (user.flow === 'bank_request_attachment') {
+    return handleBankRequestImageUpload(event, user);
   }
 
   return replyText(event.replyToken, 'ระบบยังไม่ได้อยู่ในขั้นตอนรับรูปภาพ');
@@ -774,22 +935,3 @@ app.post('/webhook', line.middleware(config), async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
-
-/*
-.env example
-LINE_CHANNEL_ACCESS_TOKEN=xxxxxxxx
-LINE_CHANNEL_SECRET=xxxxxxxx
-LINE_ADMIN_USER_IDS=Uxxxxxxxx,Uyyyyyyyy
-BASE_URL=https://your-ngrok-or-domain
-PORT=3000
-
-package.json dependencies
-{
-  "dependencies": {
-    "@line/bot-sdk": "^10.4.0",
-    "axios": "^1.7.7",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1"
-  }
-}
-*/
