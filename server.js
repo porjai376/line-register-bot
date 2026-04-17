@@ -814,6 +814,29 @@ async function handleBankRequestText(event, user, text) {
   return replyText(event.replyToken, 'ไม่พบขั้นตอนที่กำลังทำรายการ');
 }
 
+function buildHelpText() {
+  return [
+    '🔎คำสั่งใช้งาน',
+    '',
+    '📂ลงทะเบียน',
+    're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
+    '',
+    '📅เช็คสถานะ: เช็คสถานะ',
+    '',
+    '📶คำขอข้อมูลสัญญาณ',
+    '┗ ╾ base@',
+    '',
+    '🏦 คำขอข้อมูลธนาคารภายใน',
+    '┗ ╾ bank@',
+    '',
+    '🧑‍💻 ดู UID ของตนเอง',
+    '┗ ╾ myid',
+    '',
+    '❎ ยกเลิกขั้นตอนปัจจุบัน',
+    '┗ ╾ ยกเลิก',
+  ].join('\n');
+}
+
 async function handleTextMessage(event) {
   const userId = event.source.userId;
   const user = ensureUser(userId);
@@ -825,6 +848,10 @@ async function handleTextMessage(event) {
       user.lineName = profile.displayName;
       saveDb();
     }
+  }
+
+  if (text.toLowerCase() === 'help') {
+    return replyText(event.replyToken, buildHelpText());
   }
 
   if (text === 'myid') {
@@ -863,24 +890,7 @@ async function handleTextMessage(event) {
     return replyText(event.replyToken, 'ไม่มีรายการที่กำลังทำอยู่');
   }
 
-  return replyText(
-    event.replyToken,
-    [
-      'คำสั่งที่ใช้ได้',
-      '1) ลงทะเบียน',
-      're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
-      '2) เช็คสถานะ',
-      'พิมพ์: เช็คสถานะ',
-      '3) คำขอข้อมูลสัญญาณ',
-      'พิมพ์: base@',
-      '4) คำขอข้อมูลธนาคารภายใน',
-      'พิมพ์: bank@',
-      '5) ดู UID ของตนเอง',
-      'พิมพ์: myid',
-      '6) ยกเลิกขั้นตอนปัจจุบัน',
-      'พิมพ์: ยกเลิก',
-    ].join('\n')
-  );
+  return replyText(event.replyToken, buildHelpText());
 }
 
 async function handleImageMessage(event) {
