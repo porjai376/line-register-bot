@@ -22,6 +22,11 @@ const ADMIN_USER_IDS = (process.env.LINE_ADMIN_USER_IDS || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
+const BANK_ALLOWED_USER_IDS = (process.env.BANK_ALLOWED_USER_IDS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 // ✅ ใช้ Render Persistent Disk
 const PERSIST_DIR = process.env.PERSIST_DIR || '/var/data';
 const DATA_DIR = path.join(PERSIST_DIR, 'data');
@@ -116,7 +121,7 @@ function ensureUser(userId) {
       position: '',
       department: '',
       phone: '',
-      status: 'none', // none | waiting_card | pending | approved | rejected
+      status: 'none',
       cardImagePath: '',
       registeredAt: null,
       approvedAt: null,
@@ -416,24 +421,6 @@ function buildHelpFlex() {
             backgroundColor: '#F8FAFC',
             paddingAll: '12px',
             contents: [
-              { type: 'text', text: '🏦 คำขอข้อมูลธนาคารภายใน', weight: 'bold', size: 'md' },
-              {
-                type: 'text',
-                text: 'bank@',
-                size: 'sm',
-                color: '#475569',
-                wrap: true,
-                margin: 'sm',
-              },
-            ],
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            cornerRadius: '12px',
-            backgroundColor: '#F8FAFC',
-            paddingAll: '12px',
-            contents: [
               { type: 'text', text: '🧑‍💻 ดู UID ของตนเอง', weight: 'bold', size: 'md' },
               {
                 type: 'text',
@@ -489,17 +476,6 @@ function buildHelpFlex() {
               type: 'message',
               label: '📶 base@',
               text: 'base@',
-            },
-            margin: 'sm',
-          },
-          {
-            type: 'button',
-            style: 'primary',
-            color: '#D97706',
-            action: {
-              type: 'message',
-              label: '🏦 bank@',
-              text: 'bank@',
             },
             margin: 'sm',
           },
@@ -732,6 +708,14 @@ function normalizeNetwork(text) {
   const raw = String(text || '').trim().toUpperCase();
   if (['AIS', 'TRUE', 'DTAC', 'NT'].includes(raw)) return raw;
   return null;
+}
+
+function userCanUseBase(user) {
+  return !!user && user.status === 'approved' && !isExpired(user);
+}
+
+function userCanUseBank(userId, user) {
+  return userCanUseBase(user) && BANK_ALLOWED_USER_IDS.includes(userId);
 }
 
 function startSafeRequestFlow(user) {
@@ -1111,10 +1095,6 @@ async function handlePostback(event) {
   return replyText(event.replyToken, 'ไม่พบคำสั่ง');
 }
 
-function userCanUseBase(user) {
-  return !!user && user.status === 'approved' && !isExpired(user);
-}
-
 async function handleBaseStart(event, user) {
   if (!userCanUseBase(user)) {
     return replyText(event.replyToken, '❌ เฉพาะสมาชิกที่อนุมัติแล้วและยังไม่หมดอายุ');
@@ -1128,8 +1108,8 @@ async function handleBaseStart(event, user) {
 }
 
 async function handleBankStart(event, user) {
-  if (!userCanUseBase(user)) {
-    return replyText(event.replyToken, '❌ เฉพาะสมาชิกที่อนุมัติแล้วและยังไม่หมดอายุ');
+  if (!userCanUseBank(user.userId, user)) {
+    return replyText(event.replyToken, '❌ ท่านไม่มีสิทธิ์ใช้งานคำสั่งนี้');
   }
 
   startBankRequestFlow(user);
@@ -1380,6 +1360,7 @@ app.listen(PORT, () => {
 LINE_CHANNEL_ACCESS_TOKEN=xxxxxxxx
 LINE_CHANNEL_SECRET=xxxxxxxx
 LINE_ADMIN_USER_IDS=Uxxxxxxxx,Uyyyyyyyy
+BANK_ALLOWED_USER_IDS=Uxxxxxxxx,Uzzzzzzzz
 BASE_URL=https://your-render-domain.onrender.com
 PERSIST_DIR=/var/data
 PORT=3000
