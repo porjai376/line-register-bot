@@ -22,8 +22,10 @@ const ADMIN_USER_IDS = (process.env.LINE_ADMIN_USER_IDS || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
+// ✅ ใช้ Render Persistent Disk
+const PERSIST_DIR = process.env.PERSIST_DIR || '/var/data';
+const DATA_DIR = path.join(PERSIST_DIR, 'data');
+const UPLOAD_DIR = path.join(PERSIST_DIR, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -1379,6 +1381,7 @@ LINE_CHANNEL_ACCESS_TOKEN=xxxxxxxx
 LINE_CHANNEL_SECRET=xxxxxxxx
 LINE_ADMIN_USER_IDS=Uxxxxxxxx,Uyyyyyyyy
 BASE_URL=https://your-render-domain.onrender.com
+PERSIST_DIR=/var/data
 PORT=3000
 
 package.json dependencies
