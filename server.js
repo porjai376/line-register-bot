@@ -247,6 +247,110 @@ function buildStatusFlex(user) {
   };
 }
 
+function buildMyIdFlex(userId, lineName = '-') {
+  return {
+    type: 'flex',
+    altText: 'UID ของคุณ',
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#0F172A',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '🧑‍💻 UID ของคุณ',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'xl',
+          },
+          {
+            type: 'text',
+            text: 'คัดลอก UID เพื่อนำไปใช้งาน',
+            color: '#CBD5E1',
+            size: 'sm',
+            margin: 'md',
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: 'ชื่อ LINE',
+                size: 'sm',
+                color: '#64748B',
+              },
+              {
+                type: 'text',
+                text: lineName || '-',
+                weight: 'bold',
+                size: 'md',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: 'UID',
+                size: 'sm',
+                color: '#64748B',
+              },
+              {
+                type: 'text',
+                text: userId,
+                weight: 'bold',
+                size: 'sm',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'message',
+              label: '🔎 เมนูหลัก',
+              text: 'help',
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
 function buildAdminApprovalFlex(user) {
   const durations = [30, 90, 120, 365];
   const buttons = durations.map((days) => ({
@@ -1279,7 +1383,9 @@ async function handleTextMessage(event) {
   }
 
   if (text === 'myid') {
-    return replyText(event.replyToken, `UID: ${userId}`);
+    return replyMessages(event.replyToken, [
+      buildMyIdFlex(userId, user.lineName || '-')
+    ]);
   }
 
   if (text.startsWith('re#')) {
