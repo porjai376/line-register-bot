@@ -351,6 +351,731 @@ function buildMyIdFlex(userId, lineName = '-') {
   };
 }
 
+function buildSafeRequestCompleteFlex(req) {
+  return {
+    type: 'flex',
+    altText: 'รับคำขอเรียบร้อย',
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#166534',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ รับคำขอเรียบร้อย',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'xl',
+          },
+          {
+            type: 'text',
+            text: 'รอผลตรวจสอบตามลำดับ',
+            color: '#DCFCE7',
+            size: 'sm',
+            margin: 'md',
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'เลขคำขอ', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: req.requestId || '-',
+                weight: 'bold',
+                size: 'md',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'เวลาที่ส่งคำขอ', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: formatThaiDateTime(req.createdAt),
+                size: 'sm',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'หมายเลขเป้าหมาย', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: req.referenceNumber || '-',
+                weight: 'bold',
+                size: 'md',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'เครือข่าย', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: req.network || '-',
+                weight: 'bold',
+                size: 'md',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'ชื่อเคส/เหตุ', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: req.caseName || '-',
+                weight: 'bold',
+                size: 'md',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: 'รายละเอียดที่ส่ง', size: 'sm', color: '#64748B' },
+              {
+                type: 'text',
+                text: req.note || '-',
+                size: 'sm',
+                margin: 'sm',
+                wrap: true,
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'message',
+              label: '📅 เช็คสถานะ',
+              text: 'เช็คสถานะ',
+            },
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'message',
+              label: '🔎 เมนูหลัก',
+              text: 'help',
+            },
+            margin: 'sm',
+          },
+        ],
+      },
+    },
+  };
+}
+
+function buildAdminApprovalFlex(user) {
+  const durations = [30, 90, 120, 365];
+  const buttons = durations.map((days) => ({
+    type: 'button',
+    style: 'primary',
+    margin: 'sm',
+    action: {
+      type: 'postback',
+      label: `อนุมัติ ${days} วัน`,
+      data: `approve|${user.userId}|${days}`,
+      displayText: `อนุมัติ ${days} วัน`,
+    },
+  }));
+
+  buttons.push({
+    type: 'button',
+    style: 'secondary',
+    margin: 'sm',
+    action: {
+      type: 'postback',
+      label: 'ไม่อนุมัติสิทธิ์',
+      data: `reject|${user.userId}`,
+      displayText: 'ไม่อนุมัติสิทธิ์',
+    },
+  });
+
+  return {
+    type: 'flex',
+    altText: 'มีผู้สมัครใหม่ รออนุมัติ',
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        contents: [
+          { type: 'text', text: '📥 ผู้สมัครใหม่', weight: 'bold', size: 'xl' },
+          { type: 'text', text: `เวลาลงทะเบียน: ${formatThaiDateTime(user.registeredAt)}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `ยศ: ${user.rank}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `ชื่อ-สกุล: ${user.fullName}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `ตำแหน่ง: ${user.position}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `สังกัด: ${user.department}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `เบอร์โทร: ${user.phone}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `UID: ${user.userId}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `ชื่อ LINE: ${user.lineName || '-'}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `บัตร: ${user.cardImagePath || '-'}`, wrap: true, size: 'sm' },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: buttons,
+      },
+    },
+  };
+}
+
+function buildCancelTemplate(title, text) {
+  return {
+    type: 'template',
+    altText: title,
+    template: {
+      type: 'buttons',
+      title,
+      text,
+      actions: [
+        {
+          type: 'message',
+          label: '❌ ยกเลิก',
+          text: 'ยกเลิก',
+        },
+      ],
+    },
+  };
+}
+
+function buildHelpFlex() {
+  return {
+    type: 'flex',
+    altText: 'เมนูคำสั่งใช้งาน',
+    contents: {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#0F172A',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '🔎 คำสั่งใช้งาน',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'xl',
+          },
+          {
+            type: 'text',
+            text: 'เลือกดูคำสั่งที่ต้องการใช้งานได้ด้านล่าง',
+            color: '#CBD5E1',
+            size: 'sm',
+            margin: 'md',
+            wrap: true,
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '📂 ลงทะเบียน', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 're#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '📅 เช็คสถานะ', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'เช็คสถานะ',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '📶 คำขอข้อมูลสัญญาณ', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'base@',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '🏦 คำขอข้อมูลธนาคารภายใน', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'bank@',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '🧑‍💻 ดู UID ของตนเอง', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'myid',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            cornerRadius: '12px',
+            backgroundColor: '#F8FAFC',
+            paddingAll: '12px',
+            contents: [
+              { type: 'text', text: '❎ ยกเลิกขั้นตอนปัจจุบัน', weight: 'bold', size: 'md' },
+              {
+                type: 'text',
+                text: 'ยกเลิก',
+                size: 'sm',
+                color: '#475569',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#2563EB',
+            action: {
+              type: 'messagefs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+function readJson(file, fallback) {
+  try {
+    if (!fs.existsSync(file)) return fallback;
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function initialDb() {
+  return {
+    users: {},
+    processedEvents: {},
+    requests: {},
+  };
+}
+
+const db = readJson(DB_FILE, initialDb());
+if (!db.users) db.users = {};
+if (!db.processedEvents) db.processedEvents = {};
+if (!db.requests) db.requests = {};
+writeJson(DB_FILE, db);
+
+function saveDb() {
+  writeJson(DB_FILE, db);
+}
+
+function formatThaiDateTime(dateLike) {
+  const d = new Date(dateLike);
+  return d.toLocaleString('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function addDays(dateLike, days) {
+  const d = new Date(dateLike);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function isExpired(user) {
+  if (!user || !user.expireAt) return true;
+  return new Date(user.expireAt).getTime() < Date.now();
+}
+
+function cleanupProcessedEvents() {
+  const now = Date.now();
+  const ttl = 24 * 60 * 60 * 1000;
+  for (const [eventId, ts] of Object.entries(db.processedEvents)) {
+    if (now - ts > ttl) delete db.processedEvents[eventId];
+  }
+}
+
+function markEventProcessed(eventId) {
+  cleanupProcessedEvents();
+  db.processedEvents[eventId] = Date.now();
+  saveDb();
+}
+
+function isEventProcessed(eventId) {
+  cleanupProcessedEvents();
+  return !!db.processedEvents[eventId];
+}
+
+function ensureUser(userId) {
+  if (!db.users[userId]) {
+    db.users[userId] = {
+      userId,
+      lineName: '',
+      registerText: '',
+      rank: '',
+      fullName: '',
+      position: '',
+      department: '',
+      phone: '',
+      status: 'none',
+      cardImagePath: '',
+      registeredAt: null,
+      approvedAt: null,
+      expireAt: null,
+      approvedDays: null,
+      rejectedAt: null,
+      flow: null,
+      requestDraft: null,
+    };
+  }
+  return db.users[userId];
+}
+
+async function getProfileSafe(userId) {
+  try {
+    const profile = await client.getProfile(userId);
+    return profile;
+  } catch {
+    return null;
+  }
+}
+
+function parseRegisterText(text) {
+  if (!text || !text.startsWith('re#')) return null;
+  const raw = text.slice(3).trim();
+  const parts = raw.split('/').map((s) => s.trim());
+  if (parts.length !== 5) return null;
+  const [rank, fullName, position, department, phone] = parts;
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (!rank || !fullName || !position || !department || cleanPhone.length < 9) return null;
+  return {
+    rank,
+    fullName,
+    position,
+    department,
+    phone: cleanPhone,
+    raw,
+  };
+}
+
+function parseAdminSendCommand(text) {
+  if (!text || !text.startsWith('sendto#')) return null;
+
+  const raw = text.slice(7).trim();
+  const parts = raw.split('|');
+  if (parts.length < 2) return null;
+
+  const targetUserId = (parts[0] || '').trim();
+  const messageText = parts.slice(1).join('|').trim();
+
+  if (!targetUserId || !messageText) return null;
+
+  return {
+    targetUserId,
+    messageText,
+  };
+}
+
+function buildRegisterSuccessText(user) {
+  return [
+    'ลงทะเบียนเรียบร้อย✅',
+    `เวลาลงทะเบียน: ${formatThaiDateTime(user.registeredAt)}`,
+    'ข้อมูลที่ลงทะเบียน',
+    `ยศ: ${user.rank}`,
+    `ชื่อ-สกุล: ${user.fullName}`,
+    `ตำแหน่ง: ${user.position}`,
+    `สังกัด: ${user.department}`,
+    `เบอร์โทร: ${user.phone}`,
+    `UID: ${user.userId}`,
+    `ชื่อ LINE: ${user.lineName || '-'}`,
+    '📂กรุณาแนบบัตรข้าราชการ',
+  ].join('\n');
+}
+
+function buildPendingCompleteText() {
+  return [
+    'ดำเนินการครบทุกขั้นตอนเรียบร้อย💡',
+    'รอผู้ดูแลอนุมัติสิทธิ์การใช้งาน',
+    'ตรวจสอบสิทธิ กดปุ่มเช็คสถานะ📅',
+  ].join('\n');
+}
+
+function buildStatusFlex(user) {
+  let statusText = 'ยังไม่ได้ลงทะเบียน';
+  let extra = 'กรุณาส่งคำสั่ง re#ยศ/ชื่อ สกุล/ตำแหน่ง/สังกัด/เบอร์โทร';
+
+  if (user) {
+    if (user.status === 'waiting_card') {
+      statusText = 'ลงทะเบียนแล้ว รอแนบบัตร';
+      extra = 'กรุณาส่งภาพบัตรข้าราชการ';
+    } else if (user.status === 'pending') {
+      statusText = 'รอผู้ดูแลอนุมัติ';
+      extra = `ลงทะเบียนเมื่อ ${formatThaiDateTime(user.registeredAt)}`;
+    } else if (user.status === 'approved') {
+      statusText = isExpired(user) ? 'สิทธิ์หมดอายุ' : 'อนุมัติแล้ว';
+      extra = [
+        `อนุมัติเมื่อ ${user.approvedAt ? formatThaiDateTime(user.approvedAt) : '-'}`,
+        `หมดอายุ ${user.expireAt ? formatThaiDateTime(user.expireAt) : '-'}`,
+      ].join('\n');
+    } else if (user.status === 'rejected') {
+      statusText = 'ไม่อนุมัติสิทธิ์';
+      extra = user.rejectedAt ? `อัปเดตล่าสุด ${formatThaiDateTime(user.rejectedAt)}` : '-';
+    }
+  }
+
+  return {
+    type: 'flex',
+    altText: 'สถานะการใช้งาน',
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        contents: [
+          { type: 'text', text: 'เช็คสถานะสิทธิ์', weight: 'bold', size: 'xl' },
+          { type: 'separator', margin: 'md' },
+          { type: 'text', text: `สถานะ: ${statusText}`, wrap: true, size: 'md', margin: 'md' },
+          { type: 'text', text: extra, wrap: true, size: 'sm', color: '#666666' },
+        ],
+      },
+    },
+  };
+}
+
+function buildMyIdFlex(userId, lineName = '-') {
+  return {
+    type: 'flex',
+    altText: 'UID ของคุณ',
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#0F172A',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '🧑‍💻 UID ของคุณ',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'xl',
+          },
+          {
+            type: 'text',
+            text: 'คัดลอก UID เพื่อนำไปใช้งาน',
+            color: '#CBD5E1',
+            size: 'sm',
+            margin: 'md',
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: 'ชื่อ LINE',
+                size: 'sm',
+                color: '#64748B',
+              },
+              {
+                type: 'text',
+                text: lineName || '-',
+                weight: 'bold',
+                size: 'md',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#F8FAFC',
+            cornerRadius: '12px',
+            paddingAll: '12px',
+            contents: [
+              {
+                type: 'text',
+                text: 'UID',
+                size: 'sm',
+                color: '#64748B',
+              },
+              {
+                type: 'text',
+                text: userId,
+                weight: 'bold',
+                size: 'sm',
+                wrap: true,
+                margin: 'sm',
+              },
+            ],
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            action: {
+              type: 'message',
+              label: '🔎 เมนูหลัก',
+              text: 'help',
+            },
+          },
+        ],
+      },
+    },
+  };
+}
+
 function buildAdminApprovalFlex(user) {
   const durations = [30, 90, 120, 365];
   const buttons = durations.map((days) => ({
