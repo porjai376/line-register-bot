@@ -1357,6 +1357,94 @@ async function handleBankRequestText(event, user, text) {
   return replyText(event.replyToken, 'ไม่พบขั้นตอนที่กำลังทำรายการ');
 }
 
+function buildPendingUsersText() {
+  const pendingUsers = Object.values(db.users).filter(u => u.status === 'pending');
+
+  if (pendingUsers.length === 0) {
+    return '📭 ไม่มีสมาชิกที่รอการอนุมัติ';
+  }
+
+  return pendingUsers.map((u, i) => [
+    `📥 สมาชิกที่รออนุมัติ #${i + 1}`,
+    `ชื่อ LINE: ${u.lineName || '-'}`,
+    `ยศ: ${u.rank || '-'}`,
+    `ชื่อ-สกุล: ${u.fullName || '-'}`,
+    `ตำแหน่ง: ${u.position || '-'}`,
+    `สังกัด: ${u.department || '-'}`,
+    `เบอร์โทร: ${u.phone || '-'}`,
+    `UID: ${u.userId}`,
+    `ลงทะเบียน: ${u.registeredAt ? formatThaiDateTime(u.registeredAt) : '-'}`,
+    '',
+    `✅ อนุมัติ 30 วัน: approve30#${u.userId}`,
+    `✅ อนุมัติ 90 วัน: approve90#${u.userId}`,
+    `✅ อนุมัติ 365 วัน: approve365#${u.userId}`,
+    `❌ ไม่อนุมัติ: reject#${u.userId}`,
+    '----------------------'
+  ].join('\n')).join('\n');
+}
+
+async function handleAdminApproveText(event, text) {
+  const actorId = event.source.userId;
+
+  if (!ADMIN_USER_IDS.includes(actorId)) {
+    return replyText(event.replyToken, 'คำสั่งนี้สำหรับแอดมินเท่านั้น');
+  }
+
+  const approveMatch = text.match(/^approve(30|90|120|365)#(.+)$/);
+  const rejectMatch = text.match(/^reject#(.+)$/);
+
+  if (approveMatch) {
+    const days = Number(approveMatch[1]);
+    const targetUserId = approveMatch[2].trim();
+    const user = db.users[targetUserId];
+
+    if (!user) return replyText(event.replyToken, 'ไม่พบผู้ใช้งาน');
+
+    const approvedAt = new Date();
+    const expireAt = addDays(approvedAt, days);
+
+    user.status = 'approved';
+    user.approvedAt = approvedAt.toISOString();
+    user.expireAt = expireAt.toISOString();
+    user.approvedDays = days;
+    user.rejectedAt = null;
+    saveDb();
+
+    await pushText(targetUserId, [
+      `อนุมัติสิทธิ์การใช้งาน ${days} วัน✅`,
+      `วันที่อนุมัติ: ${formatThaiDateTime(user.approvedAt)}`,
+      `วันหมดอายุ: ${formatThaiDateTime(user.expireAt)}`,
+      'หลังจากนี้สามารถใช้งานเมนูที่ได้รับสิทธิ์ได้'
+    ].join('\n'));
+
+    return replyText(event.replyToken, `✅ อนุมัติ ${days} วัน ให้ ${user.fullName || targetUserId} เรียบร้อยแล้ว`);
+  }
+
+  if (rejectMatch) {
+    const targetUserId = rejectMatch[1].trim();
+    const user = db.users[targetUserId];
+
+    if (!user) return replyText(event.replyToken, 'ไม่พบผู้ใช้งาน');
+
+    user.status = 'rejected';
+    user.rejectedAt = new Date().toISOString();
+    user.approvedAt = null;
+    user.expireAt = null;
+    user.approvedDays = null;
+    saveDb();
+
+    await pushText(targetUserId, [
+      'ไม่อนุมัติสิทธิ์การใช้งาน',
+      `อัปเดตเมื่อ: ${formatThaiDateTime(user.rejectedAt)}`,
+      'กรุณาติดต่อผู้ดูแล หากต้องการยื่นข้อมูลใหม่'
+    ].join('\n'));
+
+    return replyText(event.replyToken, `❌ ไม่อนุมัติสิทธิ์ให้ ${user.fullName || targetUserId} แล้ว`);
+  }
+
+  return null;
+}
+
 async function handleTextMessage(event) {
   const userId = event.source.userId;
   const user = ensureUser(userId);
@@ -1382,6 +1470,23 @@ async function handleTextMessage(event) {
     return handleAdminSendMessage(event, text);
   }
 
+if (text === 'รออนุมัติ' || text === 'pending') {
+  if (!ADMIN_USER_IDS.includes(userId)) {
+    return replyText(event.replyToken, 'คำสั่งนี้สำหรับแอดมินเท่านั้น');
+  }
+  return replyText(event.replyToken, buildPendingUsersText());
+}
+
+if (
+  text.startsWith('approve30#') ||
+  text.startsWith('approve90#') ||
+  text.startsWith('approve120#') ||
+  text.startsWith('approve365#') ||
+  text.startsWith('reject#')
+) {
+  return handleAdminApproveText(event, text);
+}
+  
   if (text === 'myid') {
     return replyMessages(event.replyToken, [
       buildMyIdFlex(userId, user.lineName || '-')
