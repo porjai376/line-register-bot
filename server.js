@@ -1081,9 +1081,27 @@ async function handleSafeRequestImageUpload(event, user) {
   clearFlow(user);
 
   return replyText(
-    event.replyToken,
-    'รับคำขอเรียบร้อย✅\nรอผลตรวจสอบสักครู่ตามลำดับ📂'
-  );
+  event.replyToken,
+  [
+    '✅รับคำขอข้อมูลเรียบร้อย✅',
+    '--------------',
+    '👮ชื่อผู้ใช้งานขอข้อมูล👮',
+    `ชื่อ LINE: ${user.lineName || '-'}`,
+    `ชื่อ-สกุล: ${user.fullName || '-'}`,
+    `ตำแหน่ง: ${user.position || '-'}`,
+    `สังกัด: ${user.department || '-'}`,
+    `เบอร์โทร: ${user.phone || '-'}`,
+    `UID: ${user.userId}`,
+    '----------',
+    '📂ข้อมูลที่ส่งขอ📂',
+    `หมายเลข10หลัก: ${req.referenceNumber || '-'}`,
+    `เครือข่าย: ${req.network || '-'}`,
+    `ชื่อเคส/เหตุ: ${req.caseName || '-'}`,
+    `ชื่อสกุลเป้า/เลข13หลักเป้า: ${req.note || '-'}`,
+    '-------------',
+    '⚠️กรุณารอตามลำดับสักครู่⚠️'
+  ].join('\n')
+);
 }
 
 async function handleBankRequestImageUpload(event, user) {
