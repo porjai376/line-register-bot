@@ -1525,7 +1525,8 @@ if (
     return replyText(event.replyToken, 'ไม่มีรายการที่กำลังทำอยู่');
   }
 
-  return replyMessages(event.replyToken, [buildHelpFlex()]);
+  // ไม่เด้งเมนู เมื่อพิมพ์ข้อความทั่วไป
+return null;
 }
 
 async function handleImageMessage(event) {
