@@ -1464,23 +1464,26 @@ async function handleAdminApproveText(event, text) {
 }
 
 async function handleAdminRenewText(event, text) {
-
     const [cmd, userId] = text.split("#");
 
-    let days = 0;
+    const daysMap = {
+        renew30: 30,
+        renew90: 90,
+        renew120: 120,
+        renew365: 365
+    };
 
-    if (cmd === "renew30") days = 30;
-    if (cmd === "renew90") days = 90;
-    if (cmd === "renew120") days = 120;
-    if (cmd === "renew365") days = 365;
+    const days = daysMap[cmd];
 
-    const member = db.members.find(m => m.userId === userId);
+    const data = loadDB();
+    data.members = data.members || [];
+
+    const member = data.members.find(m => m.userId === userId);
 
     if (!member) {
         return replyText(event.replyToken, "❌ ไม่พบสมาชิก");
     }
 
-    // ถ้ายังไม่หมดอายุ ให้ต่อจากวันหมดอายุเดิม
     let baseDate = new Date();
 
     if (member.expireAt && new Date(member.expireAt) > new Date()) {
@@ -1493,11 +1496,11 @@ async function handleAdminRenewText(event, text) {
     member.updatedAt = nowThai();
     member.renewCount = (member.renewCount || 0) + 1;
 
-    saveDB();
+    saveDB(data);
 
     return replyText(
         event.replyToken,
-        `✅ ต่ออายุสมาชิกเรียบร้อย\n\n👤 ${member.fullname}\n📅 เพิ่ม ${days} วัน\n🗓 หมดอายุใหม่\n${formatThaiDateTime(member.expireAt)}`
+        `✅ ต่ออายุสมาชิกเรียบร้อย\n\n👤 ${member.fullname || "-"}\n📅 เพิ่ม ${days} วัน\n🗓 หมดอายุใหม่\n${formatThaiDateTime(member.expireAt)}`
     );
 }
 
