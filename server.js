@@ -1471,7 +1471,6 @@ return replyText(
   }
 
   return null;
-}
 
 async function handleAdminRenewText(event, text) {
     const [cmd, userId] = text.split("#");
