@@ -1401,42 +1401,53 @@ function buildPendingUsersText() {
   ].join('\n')).join('\n');
 }
 
-async function handleAdminApproveText(event, text) {
+async function handleAdminRenewText(event, text) {
   const actorId = event.source.userId;
 
   if (!ADMIN_USER_IDS.includes(actorId)) {
     return replyText(event.replyToken, 'คำสั่งนี้สำหรับแอดมินเท่านั้น');
   }
 
-  const approveMatch = text.match(/^approve(30|90|120|365)#(.+)$/);
-  const rejectMatch = text.match(/^reject#(.+)$/);
-
-  if (approveMatch) {
-    const days = Number(approveMatch[1]);
-    const targetUserId = approveMatch[2].trim();
-    const user = db.users[targetUserId];
-
-    if (!user) return replyText(event.replyToken, 'ไม่พบผู้ใช้งาน');
-
-    const approvedAt = new Date();
-    const expireAt = addDays(approvedAt, days);
-
-    user.status = 'approved';
-    user.approvedAt = approvedAt.toISOString();
-    user.expireAt = expireAt.toISOString();
-    user.approvedDays = days;
-    user.rejectedAt = null;
-    saveDb();
-
-    await pushText(targetUserId, [
-      `อนุมัติสิทธิ์การใช้งาน ${days} วัน✅`,
-      `วันที่อนุมัติ: ${formatThaiDateTime(user.approvedAt)}`,
-      `วันหมดอายุ: ${formatThaiDateTime(user.expireAt)}`,
-      'หลังจากนี้สามารถใช้งานเมนูที่ได้รับสิทธิ์ได้'
-    ].join('\n'));
-
-    return replyText(event.replyToken, `✅ อนุมัติ ${days} วัน ให้ ${user.fullName || targetUserId} เรียบร้อยแล้ว`);
+  const renewMatch = text.match(/^renew(30|90|120|365)#(.+)$/);
+  if (!renewMatch) {
+    return replyText(event.replyToken, 'รูปแบบคำสั่งไม่ถูกต้อง');
   }
+
+  const days = Number(renewMatch[1]);
+  const targetUserId = renewMatch[2].trim();
+
+  const user = db.users[targetUserId];
+
+  if (!user) {
+    return replyText(event.replyToken, 'ไม่พบผู้ใช้งาน');
+  }
+
+  const now = new Date();
+
+  let baseDate = now;
+  if (user.expireAt && new Date(user.expireAt).getTime() > now.getTime()) {
+    baseDate = new Date(user.expireAt);
+  }
+
+  const newExpireAt = addDays(baseDate, days);
+
+  user.status = 'approved';
+  user.expireAt = newExpireAt.toISOString();
+  user.updatedAt = now.toISOString();
+  user.renewCount = (user.renewCount || 0) + 1;
+
+  saveDb();
+
+  await pushText(targetUserId, [
+    `✅ ต่ออายุสมาชิกเรียบร้อย ${days} วัน`,
+    `วันหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`,
+  ].join('\n'));
+
+  return replyText(
+    event.replyToken,
+    `✅ ต่ออายุ ${days} วัน ให้ ${user.fullName || targetUserId} เรียบร้อยแล้ว\nหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`
+  );
+}
 
   if (rejectMatch) {
     const targetUserId = rejectMatch[1].trim();
@@ -1547,12 +1558,12 @@ if (
 }
 
 if (
-    text.startsWith('renew30#') ||
-    text.startsWith('renew90#') ||
-    text.startsWith('renew120#') ||
-    text.startsWith('renew365#')
+  text.startsWith('renew30#') ||
+  text.startsWith('renew90#') ||
+  text.startsWith('renew120#') ||
+  text.startsWith('renew365#')
 ) {
-    return handleAdminRenewText(event, text);
+  return handleAdminRenewText(event, text);
 }
   
   if (text === 'myid') {
