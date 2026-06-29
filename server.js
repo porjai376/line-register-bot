@@ -1463,6 +1463,44 @@ async function handleAdminApproveText(event, text) {
   return null;
 }
 
+async function handleAdminRenewText(event, text) {
+
+    const [cmd, userId] = text.split("#");
+
+    let days = 0;
+
+    if (cmd === "renew30") days = 30;
+    if (cmd === "renew90") days = 90;
+    if (cmd === "renew120") days = 120;
+    if (cmd === "renew365") days = 365;
+
+    const member = db.members.find(m => m.userId === userId);
+
+    if (!member) {
+        return replyText(event.replyToken, "❌ ไม่พบสมาชิก");
+    }
+
+    // ถ้ายังไม่หมดอายุ ให้ต่อจากวันหมดอายุเดิม
+    let baseDate = new Date();
+
+    if (member.expireAt && new Date(member.expireAt) > new Date()) {
+        baseDate = new Date(member.expireAt);
+    }
+
+    baseDate.setDate(baseDate.getDate() + days);
+
+    member.expireAt = baseDate.toISOString();
+    member.updatedAt = nowThai();
+    member.renewCount = (member.renewCount || 0) + 1;
+
+    saveDB();
+
+    return replyText(
+        event.replyToken,
+        `✅ ต่ออายุสมาชิกเรียบร้อย\n\n👤 ${member.fullname}\n📅 เพิ่ม ${days} วัน\n🗓 หมดอายุใหม่\n${formatThaiDateTime(member.expireAt)}`
+    );
+}
+
 async function handleTextMessage(event) {
   const userId = event.source.userId;
   const user = ensureUser(userId);
@@ -1496,13 +1534,22 @@ if (text === 'รออนุมัติ' || text === 'pending') {
 }
 
 if (
-  text.startsWith('approve30#') ||
-  text.startsWith('approve90#') ||
-  text.startsWith('approve120#') ||
-  text.startsWith('approve365#') ||
-  text.startsWith('reject#')
+    text.startsWith('approve30#') ||
+    text.startsWith('approve90#') ||
+    text.startsWith('approve120#') ||
+    text.startsWith('approve365#') ||
+    text.startsWith('reject#')
 ) {
-  return handleAdminApproveText(event, text);
+    return handleAdminApproveText(event, text);
+}
+
+if (
+    text.startsWith('renew30#') ||
+    text.startsWith('renew90#') ||
+    text.startsWith('renew120#') ||
+    text.startsWith('renew365#')
+) {
+    return handleAdminRenewText(event, text);
 }
   
   if (text === 'myid') {
