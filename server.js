@@ -1462,11 +1462,10 @@ return replyText(
     user.approvedDays = null;
     saveDb();
 
-    await pushText(targetUserId, [
-      'ไม่อนุมัติสิทธิ์การใช้งาน',
-      `อัปเดตเมื่อ: ${formatThaiDateTime(user.rejectedAt)}`,
-      'กรุณาติดต่อผู้ดูแล หากต้องการยื่นข้อมูลใหม่'
-    ].join('\n'));
+    pushText(targetUserId, [
+  `✅ ต่ออายุสมาชิกเรียบร้อย ${days} วัน`,
+  `วันหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`,
+].join('\n')).catch(console.error);
 
     return replyText(event.replyToken, `❌ ไม่อนุมัติสิทธิ์ให้ ${user.fullName || targetUserId} แล้ว`);
   }
