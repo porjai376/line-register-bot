@@ -1438,15 +1438,15 @@ async function handleAdminRenewText(event, text) {
 
   saveDb();
 
-  await pushText(targetUserId, [
-    `✅ ต่ออายุสมาชิกเรียบร้อย ${days} วัน`,
-    `วันหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`,
-  ].join('\n'));
+  pushText(targetUserId, [
+  `✅ ต่ออายุสมาชิกเรียบร้อย ${days} วัน`,
+  `วันหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`,
+].join('\n')).catch(console.error);
 
-  return replyText(
-    event.replyToken,
-    `✅ ต่ออายุ ${days} วัน ให้ ${user.fullName || targetUserId} เรียบร้อยแล้ว\nหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`
-  );
+return replyText(
+  event.replyToken,
+  `✅ ต่ออายุ ${days} วัน ให้ ${user.fullName || targetUserId} เรียบร้อยแล้ว\nหมดอายุใหม่: ${formatThaiDateTime(user.expireAt)}`
+);
 }
 
   if (rejectMatch) {
